@@ -189,6 +189,7 @@ You will need to write controllers to handle authentication, account creation, l
 
    import web
    from web.auth import authenticate, deauthenticate
+   from marrow.util.bunch import Bunch
 
 
    from YOURPROJECT import model as db
@@ -199,7 +200,7 @@ You will need to write controllers to handle authentication, account creation, l
 
 
 
-   class JoinMethod(web.core.RESTMethod):
+   class JoinMethod(web.core.HTTPMethod):
        def get(self):
            return "YOURPROJECT.templates.join", dict()
     
@@ -209,7 +210,7 @@ You will need to write controllers to handle authentication, account creation, l
    join = JoinMethod()
 
 
-   class RecoverMethod(web.core.RESTMethod):
+   class RecoverMethod(web.core.HTTPMethod):
        def get(self):
            return "YOURPROJECT.templates.recover", dict()
     
@@ -219,7 +220,7 @@ You will need to write controllers to handle authentication, account creation, l
    recover = RecoverMethod()
 
 
-   class LoginMethod(web.core.RESTMethod):
+   class LoginMethod(web.core.HTTPMethod):
        def get(self, redirect=None):
            if redirect is None:
                referrer = web.core.request.referrer
@@ -228,7 +229,7 @@ You will need to write controllers to handle authentication, account creation, l
            return "YOURPROJECT.templates.login", dict(redirect=redirect)
     
        def post(self, **kw):
-           data = web.utils.dictionary.adict(kw)
+           data = Bunch(kw)
         
            if not web.auth.authenticate(data.username, data.password):
                return "YOURPROJECT.templates.login", dict(redirect=kw['redirect'])

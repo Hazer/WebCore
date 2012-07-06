@@ -3,8 +3,9 @@
 """MongoEngine database adapter."""
 
 import re
-
+import warnings
 import mongoengine
+from marrow.util.object import load_object
 
 
 __all__ = ['MongoEngineMiddleware']
@@ -30,7 +31,7 @@ def MongoEngineMiddleware(application, prefix, model, session=None, **config):
     connection['host'], connection['port'] = host.split(':') if ':' in host else (host, '27017')
     connection['port'] = int(connection['port'])
     
-    if auth:
+    if auth: # pragma: no cover
         connection['username'], _, connection['password'] = auth.partition(':')
     
     log.debug("Connecting to %s database with connection information: %r", db, connection)
@@ -38,6 +39,16 @@ def MongoEngineMiddleware(application, prefix, model, session=None, **config):
     
     prepare = getattr(model, 'prepare', None)
     if hasattr(prepare, '__call__'):
+        warnings.warn("Use of the hard-coded 'prepare' callback is deprecated.\n"
+                "Use the 'ready' callback instead.", DeprecationWarning)
         prepare()
+    
+    cb = config.get(prefix + '.ready', None)
+    
+    if cb is not None:
+        cb = load_object(cb) if isinstance(cb, basestring) else cb
+        
+        if hasattr(cb, '__call__'):
+            cb()
     
     return application

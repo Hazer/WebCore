@@ -5,14 +5,14 @@ configuration.
 """
 
 import os
+import warnings
+import functools
 import pkg_resources
-
-from paste.deploy.converters import asbool, asint, aslist
-
 import web
 
+from marrow.util.convert import boolean, array, integer
+from marrow.util.object import load_object
 
-__all__ = ['registry', 'middleware', 'template', 'TemplatingMiddleware']
 
 log = __import__('logging').getLogger(__name__)
 
@@ -78,9 +78,11 @@ def templateinterface(app, config):
 
 
 @middleware('widgets', after="templating")
-def toscawidgets(app, config):
+def toscawidgets(app, config): # pragma: no cover
     if not defaultbool(config.get('web.widgets', False), ['toscawidgets']):
         return app
+    
+    warnings.warn("ToscaWidgets support is deprecated; try marrow.tags instead.", DeprecationWarning)
     
     try:
         from tw.api import make_middleware as ToscaWidgetsMiddleware
@@ -122,37 +124,33 @@ def database(app, config):
         return app
     
     try:
-        for connection in aslist(config.get('db.connections')):
+        for connection in array(config.get('db.connections')):
             connection = connection.strip(',')
             
             engine = config.get('db.%s.engine' % (connection,), 'sqlalchemy')
             
             try:
                 if '.' in engine and ':' in engine:
-                    engine = web.utils.object.get_dotted_object(engine)
-                
+                    engine = load_object(engine)
                 else:
                     try:
                         engine = [i for i in pkg_resources.iter_entry_points(group='webcore.db.engines', name=engine)][0].load()
                     except IndexError:
                         raise Exception('No engine registered with the name: %s' % (engine,))
-            
             except:
                 log.exception("Unable to load engine middleware: %r.", engine)
                 raise
             
             try:
                 model = config.get('db.%s.model' % (connection,))
-                model = web.utils.object.get_dotted_object(model) if isinstance(model, basestring) else model
-            
+                model = load_object(model) if isinstance(model, basestring) else model
             except:
                 log.exception("Unable to load application model: %r.", model)
                 raise
             
             try:
                 session = config.get('db.%s.session' % (connection,), '%s:session' % (config.get('db.%s.model' % (connection,)),))
-                session = web.utils.object.get_dotted_object(session) if isinstance(session, basestring) else session
-            
+                session = load_object(session) if isinstance(session, basestring) else session
             except:
                 log.info("No session defined for the %s database connection.", connection)
             
@@ -193,6 +191,7 @@ def sessions(app, config):
         
         if 'session.cookie_expires' in beakerconfig and isinstance(beakerconfig['session.cookie_expires'], basestring):
             value = beakerconfig['session.cookie_expires']
+            
             if value.lower() in ['yes', 'on', 'true']:
                 beakerconfig['session.cookie_expires'] = True
             elif value.lower() in ['no', 'off', 'false']:
@@ -227,7 +226,6 @@ def caching(app, config):
         
         log.debug("Loading Beaker cache middleware.")
         return CacheMiddleware(app, beakerconfig)
-    
     except ImportError:  # pragma: no cover
         raise ImportError("You must install Beaker to enable caching")
 
@@ -244,18 +242,16 @@ def debugging(app, config):
             if i.startswith('debug.'):
                 localconfig[i[6:]] = j
         
-        if asbool(config.get('debug', False)):
+        if boolean(config.get('debug', False)):
             log.debug("Debugging enabled; exceptions raised will display an interactive traceback.")
             
             from weberror.evalexception import EvalException
             return EvalException(app, config, **localconfig)
-        
         else:
             log.debug("Debugging disabled; exceptions raised will display a 500 error.")
             
             from weberror.errormiddleware import ErrorMiddleware
             return ErrorMiddleware(app, config, **localconfig)
-    
     except ImportError:  # pragma: no cover
         raise ImportError("You must install WebError to enable debugging")
 
@@ -269,51 +265,65 @@ def threadlocal(app, config):
 @middleware('static', after="registry")
 def static(app, config):
     # Enabled explicitly or while debugging so you can use Paste's HTTP server.
-    if config.get('web.static', None) is None and not asbool(config.get('debug', False)):
+    if config.get('web.static', None) is None and not boolean(config.get('debug', False)):
         return app
-    
-    if not asbool(config.get('web.static', False)):
+
+    if not boolean(config.get('web.static', False)):
         return app
-    
+
     from paste.cascade import Cascade
     from paste.fileapp import DirectoryApp
-    
+
     path = config.get('web.static.path', None)
-    
+    base = config.get('web.static.root', None)
+
     if path is None:
         # Attempt to discover the path automatically.
         module = __import__(config['web.root'].__module__)
         parts = config['web.root'].__module__.split('.')[1:]
         path = module.__file__
-        
+
         if not parts:
             parts = ['.']
-        
-        while parts:
+
+        while parts: # pragma: no cover
             # Search up the package tree, in case this is an application in a sub-module.
-            
+
             path = os.path.abspath(path)
             path = os.path.dirname(path)
             path = os.path.join(path, 'public')
-            
+
             log.debug("Trying %r", path)
-            
+
             if os.path.isdir(path):
                 break
-            
+
             if parts[0] == '.':
                 break
+
             module = getattr(module, parts.pop(0))
             path = module.__file__
-    
+
     if not os.path.isdir(path):
         log.warn("Unable to find folder to serve static content from. "
                  "Please specify web.static.path in your config.")
         return app
-    
-    log.debug("Serving static files from '%s'.", path)
-    
-    return Cascade([DirectoryApp(path), app], catch=[401, 403, 404])
+
+    log.debug("Serving static files from '%s' at '%s'.", path, base or '/')
+
+    subapp = DirectoryApp(path)
+
+    if base:
+        def inner(app, environ, start_response):
+            from webob.exc import HTTPNotFound
+            if not environ['PATH_INFO'].startswith(base):
+                return HTTPNotFound()(environ, start_response)
+            environ['PATH_INFO'] = environ['PATH_INFO'][len(base.rstrip('/')):]
+            return app(environ, start_response)
+
+        subapp = functools.partial(inner, subapp)
+
+    return Cascade([subapp, app], catch=[401, 403, 404])
 
 
 @middleware('compression', after="static")
@@ -325,7 +335,7 @@ def compression(app, config):
     log.debug("Enabling HTTP compression.")
     
     from paste.gzipper import middleware as GzipMiddleware
-    return GzipMiddleware(app, compress_level=asint(config.get('web.compress.level', 6)))
+    return GzipMiddleware(app, compress_level=integer(config.get('web.compress.level', 6)))
 
 
 @middleware('profiling', after="compression")
@@ -341,18 +351,17 @@ def profiling(app, config):
         return AccumulatingProfileMiddleware(
                 app,
                 log_filename=config.get('web.profile.log', 'profile.prof'),
-                discard_first_request=asbool(config.get('web.profile.discard', 'true')),
-                flush_at_shutdown=asbool(config.get('web.profile.flush', 'true')),
+                discard_first_request=boolean(config.get('web.profile.discard', 'true')),
+                flush_at_shutdown=boolean(config.get('web.profile.flush', 'true')),
                 path=config.get('web.profile.path', '/__profile__')
             )
-    
     except ImportError:  # pragma: no cover
         raise ImportError("You must install repoze.profile to enable profiling")
 
 
-@middleware('i18n', after="widgets")
-def i18n(app, config):
-    if not defaultbool(config.get('web.locale', False), ['gettext']):
+@middleware('locale', after="widgets")
+def locale(app, config):
+    if not defaultbool(config.get('web.locale.i18n', False), ['gettext']):
         return app
     
     from web.core.locale import LocaleMiddleware

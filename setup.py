@@ -41,6 +41,7 @@ setup(
                 'PasteScript',
                 'WebOb',
                 'WebError',
+                'marrow.util < 1.3',
                 'marrow.templating'
             ],
         
@@ -49,11 +50,15 @@ setup(
                 'nose',
                 'coverage',
                 'Genshi',
+                'Mako',
                 'SQLAlchemy',
+                'pymongo',
+                'MongoEngine',
                 'Beaker',
                 'ToscaWidgets',
                 'Routes',
-                'repoze.profile'
+                'repoze.profile',
+                'pyamf'
             ],
         
         classifiers = [

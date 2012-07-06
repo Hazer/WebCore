@@ -1,7 +1,9 @@
 # encoding: utf-8
 
-import web.core
+import web
+
 from routes.mapper import Mapper
+from web.core.http import HTTPNotFound
 
 
 __all__ = ['RoutingController']
@@ -35,7 +37,7 @@ class RoutingController(web.core.Dialect):
         result = self._map.match(environ=request.environ)
         
         if not result:
-            raise web.core.http.HTTPNotFound()
+            raise HTTPNotFound()
         
         parts = result.get('controller').split('.') if 'controller' in result else []
         
@@ -43,21 +45,17 @@ class RoutingController(web.core.Dialect):
         
         for part in parts:
             if not hasattr(controller, part):
-                raise web.core.http.HTTPNotFound()
+                raise HTTPNotFound()
             
             controller = getattr(controller, part)
         
         method = result.get('action', None)
-        
-        if method is None:
-            raise web.core.http.HTTPNotFound()
-        
-        try:
-            del result['controller']
-        
-        except:
-            pass
-        
+        result.pop('controller', None)
         del result['action']
         
-        return getattr(controller, method)(**result)
+        m = getattr(controller, method, None)
+        
+        if not m:
+            raise HTTPNotFound()
+        
+        return m(**result)

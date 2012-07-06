@@ -1,8 +1,10 @@
 # encoding: utf-8
 
-import web.core
+import web
 
 from api import Dialect
+
+from marrow.util.convert import boolean
 
 
 log = __import__('logging').getLogger(__name__)
@@ -38,17 +40,19 @@ class Controller(Dialect):
         
         last = None
         part = self
+        trailing = boolean(web.core.config.get('trailing_slashes', True))
         
         while True:
             last = part
             part = request.path_info_peek()
+            request.environ['web.controller'] = request.script_name
             
             if not part:
                 # If the last object under consideration was a controller, not a method,
                 # attempt to call the index method, then attempt the default, or bail
                 # with a 404 error.
                 
-                if not request.path.endswith('/') and getattr(last, '__trailing_slash__', web.core.config.get('trailing_slashes', True)):
+                if not request.path.endswith('/') and getattr(last, '__trailing_slash__', trailing):
                     location = request.path + '/' + (('?' + request.query_string) if request.query_string else '')
                     log.debug("Trailing slash omitted from path, redirecting to %s.", location)
                     raise web.core.http.HTTPMovedPermanently(location=location)
@@ -64,24 +68,23 @@ class Controller(Dialect):
             remaining = request.path_info.strip('/')
             remaining = remaining.split('/') if remaining else []
             
-            if not protected:
-                if not isinstance(part, Controller) and isinstance(part, Dialect):
-                    log.debug("Context switching from Controller to other Dialect instance.")
-                    request.path_info_pop()
-                    return part(request)
-                
-                # If the URL portion exists as an attribute on the object in question, start searching again on that attribute.
-                if isinstance(part, Controller):
-                    log.debug("Continuing descent through controller structure.")
-                    request.path_info_pop()
-                    continue
-                
-                # If the current object under consideration is a decorated controller method, the search is ended.
-                if hasattr(part, '__call__'):
-                    log.debug("Found callable, passing control. part(%r, %r)", remaining[1:], data)
-                    request.path_info_pop()
-                    remaining, data = last.__before__(*remaining[1:], **data)
-                    return last.__after__(part(*remaining, **data))
+            if not isinstance(part, Controller) and isinstance(part, Dialect):
+                log.debug("Context switching from Controller to other Dialect instance.")
+                request.path_info_pop()
+                return part(request)
+            
+            # If the URL portion exists as an attribute on the object in question, start searching again on that attribute.
+            if isinstance(part, Controller):
+                log.debug("Continuing descent through controller structure.")
+                request.path_info_pop()
+                continue
+            
+            # If the current object under consideration is a decorated controller method, the search is ended.
+            if hasattr(part, '__call__') and not protected:
+                log.debug("Found callable, passing control. part(%r, %r)", remaining[1:], data)
+                request.path_info_pop()
+                remaining, data = last.__before__(*remaining[1:], **data)
+                return last.__after__(part(*remaining, **data))
             
             fallback = None
             
