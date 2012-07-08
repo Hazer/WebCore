@@ -1,10 +1,10 @@
 # encoding: utf-8
 
-from webob.exc import HTTPNotImplemented
-
 from web.core import Dialect
+from web.core.http import HTTPNotImplemented
 
 
+__all__ = ['RoutingError', 'route']
 log = __import__('logging').getLogger(__name__)
 
 
@@ -48,5 +48,5 @@ def route(root, method, expects):
             parts.pop()
             return part, last
         
-        log.error("An attempt as made to call an unroutable method: %s", method)
+        log.error("An attempt was made to call an unroutable method: %s", method)
         raise RoutingError

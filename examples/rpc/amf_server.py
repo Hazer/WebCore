@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
 """A basic hello world application.
 
 This can be simplified down to 5 lines in total; two import lines, two
@@ -16,11 +19,7 @@ class TestService(AMFController):
         return "Hello, %(name)s!" % dict(name=name)
 
 
-class RootController(AMFController):
-    test = TestService()
-
-
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    app = Application.factory(root=RootController, debug=False)
+    app = Application.factory(root=TestService, debug=False)
     httpserver.serve(app, host='127.0.0.1', port='8080')

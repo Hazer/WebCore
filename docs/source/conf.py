@@ -63,7 +63,7 @@ html_theme_path = ['tools/themes']
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-html_title = "WebCore %s Documentation" % (version, )
+html_title = "WebCore {} Documentation".format(version)
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
@@ -149,7 +149,7 @@ latex_use_parts = True
 #latex_use_modindex = True
 
 
-intersphinx_mapping = {'python': ('http://docs.python.org/dev', None),
+intersphinx_mapping = {'python': ('http://docs.python.org/2.7/', None),
                        'sqlalchemy': ('http://www.sqlalchemy.org/docs/', None),
                        'sprox': ('http://sprox.org/', None),
                        'twforms': ('http://toscawidgets.org/documentation/tw.forms/', None),

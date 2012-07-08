@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
 """A basic hello world application.
 
 This can be simplified down to 5 lines in total; two import lines, two
@@ -8,8 +11,9 @@ import logging
 from paste import httpserver
 
 from web.core import Application, Controller
-from web.rpc.amf import AMFController
 from web.rpc.xml import XMLRPCController
+from web.rpc.jsonrpc import JSONRPCController
+from web.rpc.amf import AMFController
 
 
 class TestServiceMethods(object):
@@ -21,6 +25,10 @@ class TestXMLService(TestServiceMethods, XMLRPCController):
     pass
 
 
+class TestJSONService(TestServiceMethods, JSONRPCController):
+    pass
+
+
 class TestAMFService(TestServiceMethods, AMFController):
     pass
 
@@ -29,12 +37,17 @@ class XMLRPCRoot(XMLRPCController):
     test = TestXMLService()
 
 
+class JSONRPCRoot(JSONRPCController):
+    test = TestJSONService()
+
+
 class AMFRoot(AMFController):
     test = TestAMFService()
 
 
 class RootController(Controller):
     rpc = XMLRPCRoot()
+    jsonrpc = JSONRPCRoot()
     gateway = AMFRoot()
 
 
