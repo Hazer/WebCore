@@ -14,6 +14,10 @@ Base = declarative_base()
 Session = scoped_session(sessionmaker())
 
 
+class DummyException(Exception):
+    pass
+
+
 class DummyModel(Base):
     __tablename__ = 'dummy'
     id = Column(Integer, primary_key=True)
@@ -25,8 +29,8 @@ def commit_controller(context):
 
 
 def rollback_controller(context):
-    Session.add(DummyModel(name='foo'))
-    raise Exception
+    Session.add(DummyModel(name='baz'))
+    raise DummyException
 
 
 class TestSQLAlchemyExtension(object):
@@ -34,26 +38,36 @@ class TestSQLAlchemyExtension(object):
             'extensions': {
                     'sqlalchemy': {
                             'url': 'sqlite:///',
-                            'session': Session
+                            'session': Session,
+                            'metadata': Base.metadata
                         }
                 }
         }
 
+    def teardown(self):
+        Session.remove()
+        Session.configure(bind=None)
+        Base.metadata.bind = None
+
     def test_automatic_commit(self):
         app = Application(commit_controller, self.default_config)
+        Base.metadata.create_all()
         request = LocalRequest()
         status, headers, body = app(request.environ)
+        obj = Session.query(DummyModel).first()
 
         eq_(status, b'200 OK')
-
-        obj = Session.query().first()
-        eq_(obj.name, 'name', self.dummy_user)
+        eq_(obj.name, 'foo')
         assert obj.id > 0
 
     def test_rollback_on_exception(self):
         app = Application(rollback_controller, self.default_config)
+        Base.metadata.create_all()
         request = LocalRequest()
-        status, headers, body = app(request.environ)
 
-        eq_(status, b'500 Internal Server Error')
-        eq_(Session.query().first(), None)
+        try:
+            app(request.environ)
+        except DummyException:
+            pass
+
+        eq_(Session.query(DummyModel).first(), None)
