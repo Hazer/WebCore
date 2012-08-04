@@ -37,14 +37,14 @@ setup(
         install_requires = [
                 'marrow.util < 1.3',
                 'marrow.templating',
-                'marrow.wsgi.objects'
+                'marrow.wsgi.objects',
+                'marrow.logging'
             ],
 
         test_suite = 'nose.collector',
         tests_require = [
                 'nose',
-                'coverage',
-                'sqlalchemy >= 0.7, <= 0.8'
+                'coverage'
             ],
 
         classifiers = [

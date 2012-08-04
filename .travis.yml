@@ -4,14 +4,14 @@ python:
   - "2.7"
   - "3.2"
 install:
-  - pip install git+https://github.com/marrow/marrow.util.git
-  - pip install git+https://github.com/marrow/marrow.templating.git
-  - pip install git+https://github.com/marrow/marrow.wsgi.objects.git
-  - pip install git+https://github.com/marrow/marrow.interface.git
-  - pip install git+https://github.com/marrow/marrow.config.git
-  - pip install nose coverage
-  - pip install -e . --use-mirrors
-script: ./setup.py test
+  - pip install -q git+https://github.com/marrow/marrow.util.git
+  - pip install -q git+https://github.com/marrow/marrow.logging.git
+  - pip install -q git+https://github.com/marrow/marrow.templating.git
+  - pip install -q git+https://github.com/marrow/marrow.wsgi.objects.git
+  - pip install -q git+https://github.com/marrow/marrow.interface.git
+  - pip install -q git+https://github.com/marrow/marrow.config.git
+  - pip install -q -e . --use-mirrors
+script: ./setup.py --quiet test
 notifications:
   irc:
     channels: "irc.freenode.org#webcore"
