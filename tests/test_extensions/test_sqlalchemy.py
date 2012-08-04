@@ -46,7 +46,7 @@ class TestSQLAlchemyExtension(object):
 
         eq_(status, b'200 OK')
 
-        obj = self.session.query().first()
+        obj = Session.query().first()
         eq_(obj.name, 'name', self.dummy_user)
         assert obj.id > 0
 
@@ -56,4 +56,4 @@ class TestSQLAlchemyExtension(object):
         status, headers, body = app(request.environ)
 
         eq_(status, b'500 Internal Server Error')
-        eq_(self.session.query().first(), None)
+        eq_(Session.query().first(), None)
