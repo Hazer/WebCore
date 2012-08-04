@@ -10,9 +10,9 @@ class SQLAlchemyExtension(object):
         super(SQLAlchemyExtension, self).__init__()
 
         if not isinstance(session, ScopedSession):
-            raise TypeError('The "metadata" option needs to be a reference to a MetaData')
-        if not isinstance(metadata, MetaData):
             raise TypeError('The "session" option needs to be a reference to a ScopedSession')
+        if metadata is not None and not isinstance(metadata, MetaData):
+            raise TypeError('The "metadata" option needs to be a reference to a MetaData')
 
         self._engine = create_engine(url, **kwargs)
         self._session = session
