@@ -1,8 +1,9 @@
 # coding: utf-8
 from __future__ import unicode_literals, division, print_function, absolute_import
 
-from nose.tools import eq_
+from nose.tools import eq_, assert_raises
 from marrow.wsgi.objects.request import LocalRequest
+from marrow.wsgi.exceptions import HTTPFound
 from sqlalchemy import Column, Integer, Unicode
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -33,6 +34,11 @@ def rollback_controller(context):
     raise DummyException
 
 
+def httpexception_controller(context):
+    Session.add(DummyModel(name='bar'))
+    raise HTTPFound(location=b'/')
+
+
 class TestSQLAlchemyExtension(object):
     default_config = {
             'extensions': {
@@ -54,6 +60,7 @@ class TestSQLAlchemyExtension(object):
         Base.metadata.create_all()
         request = LocalRequest()
         status, headers, body = app(request.environ)
+
         obj = Session.query(DummyModel).first()
 
         eq_(status, b'200 OK')
@@ -65,9 +72,18 @@ class TestSQLAlchemyExtension(object):
         Base.metadata.create_all()
         request = LocalRequest()
 
-        try:
-            app(request.environ)
-        except DummyException:
-            pass
-
+        assert_raises(DummyException, app, request.environ)
         eq_(Session.query(DummyModel).first(), None)
+
+    def test_commit_on_httpexception(self):
+        app = Application(httpexception_controller, self.default_config)
+        Base.metadata.create_all()
+        request = LocalRequest()
+        status, headers, body = app(request.environ)
+
+        eq_(list(Session.new), [])  # make sure that either commit or rollback has happened
+        obj = Session.query(DummyModel).first()
+
+        eq_(status, b'302 Found')
+        eq_(obj.name, 'bar')
+        assert obj.id > 0

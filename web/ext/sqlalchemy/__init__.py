@@ -1,5 +1,6 @@
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy.orm import ScopedSession
+from marrow.wsgi.exceptions import HTTPException
 
 
 class SQLAlchemyExtension(object):
@@ -33,10 +34,10 @@ class SQLAlchemyExtension(object):
 
     def after(self, context, exc=None):
         if self._session.is_active:
-            if exc is not None:
-                self._session.rollback()
-            else:
+            if exc is None or isinstance(exc, HTTPException):
                 self._session.commit()
+            else:
+                self._session.rollback()
 
         # Return the context-local connection to the connection pool
         self._session.close()
