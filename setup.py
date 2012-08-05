@@ -44,7 +44,8 @@ setup(
         test_suite = 'nose.collector',
         tests_require = [
                 'nose',
-                'coverage'
+                'coverage',
+                'sqlalchemy >= 0.7'
             ],
 
         classifiers = [
