@@ -7,7 +7,7 @@ class SQLAlchemyExtension(object):
     uses = ['transaction']
     provides = ['sqlalchemy']
 
-    def __init__(self, context, url, session, metadata=None, test_connection=True, **kwargs):
+    def __init__(self, context, url, session, metadata=None, **kwargs):
         super(SQLAlchemyExtension, self).__init__()
 
         if not isinstance(session, ScopedSession):
@@ -18,12 +18,10 @@ class SQLAlchemyExtension(object):
         self._engine = create_engine(url, **kwargs)
         self._session = session
         self._metadata = metadata
-        self._test_connection = test_connection
 
     def start(self, context):
         # Test the validity of the URL by attempting to make a connection to the target database
-        if self._test_connection:
-            self._engine.connect().close()
+        self._engine.connect().close()
 
         # Bind the engine to the session to enable execution of raw SQL
         self._session.configure(bind=self._engine)
