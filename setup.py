@@ -45,7 +45,7 @@ setup(
         tests_require = [
                 'nose',
                 'coverage',
-                'sqlalchemy >= 0.7'
+                'sqlalchemy'
             ],
 
         classifiers = [
