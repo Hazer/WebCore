@@ -43,7 +43,6 @@ class URLGenerator(object):
         To switch to a secure connection without changing the URL you can call
         url(protocol='https').
         """
-        
         if protocol or host or port:
             return self._full(path, params, anchor, protocol, host, port)
         
@@ -98,10 +97,10 @@ class URLGenerator(object):
         if port:
             url.port = port
         
-        url.params = params
+        url.query = params
         url.fragment = anchor
         
-        return str(url)
+        return unicode(url)
     
     def _partial(self, path, params, anchor):
         """Prepare a resource path."""
@@ -118,4 +117,4 @@ class URLGenerator(object):
         url.query = params
         url.fragment = anchor
         
-        return str(url)
+        return unicode(url)
