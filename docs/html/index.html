@@ -1,0 +1,250 @@
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        
+        <title>WebCore Documentation</title>
+        
+        <meta name="description" content="">
+        <meta name="author" content="">
+        
+        <meta name="viewport" content="width=device-width">
+        
+        <link rel="stylesheet" href="js/libs/code/prettify.css" type="text/css" charset="utf-8">
+        <link rel="stylesheet/less" href="less/style.less">
+        <script src="js/libs/less-1.3.0.min.js"></script>
+        
+        <!-- <link rel="stylesheet" href="less/style.css"> -->
+        
+        <script src="js/libs/modernizr-2.5.3-respond-1.1.0.min.js"></script>
+    </head>
+    <body>
+        <!--[if lt IE 7]><p class=chromeframe>Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
+        
+        <nav class="page">
+            <a class="brand" href="#">Web<b>Core</b></a>
+            <menu class="breadcrumb">
+                <li><a href="">Home</a></li
+                ><li><a href="">API</a><span>▾</span></li
+                ><li><a href="">Extensions</a><span>▾</span></li
+                ><li class="active"><a href="">Templates</a><span>▾</span></li>
+            </menu>
+            <menu class="navigation">
+                <li><a href="" rel="prev">❮</a></li
+                ><li><a href="" rel="next">❯</a></li>
+            </menu>
+        </nav>
+        
+        <aside class="toc">
+            <nav>
+                <label>Template Rendering Extension</label>
+                
+                <dl class="toc">
+                    <dt><a href="#">Introduction</a></dt>
+                    <dd><menu>
+                        <li><a href="#">Purpose</a></li>
+                        <li><a href="#">Requirements</a></li>
+                        <li><a href="#">Operation</a></li>
+                    </menu></dd>
+                    
+                    <dt><a href="#">Usage</a></dt>
+                    <dd><menu>
+                        <li><a href="#">Configuration</a></li>
+                        <li><a href="#">Features for Python 3</a></li>
+                    </menu></dd>
+                    
+                    <dt><a href="#">Extending</a></dt>
+                    <dd><menu>
+                        <li><a href="#">Adding Engines</a></li>
+                        <li><a href="#">Template Namespace</a></li>
+                        <li><a href="#">Overriding Template Selection</a></li>
+                        <li><a href="#">Overriding Behaviour</a></li>
+                    </menu></dd>
+                </dl>
+            </nav>
+        </aside>
+        
+        <section id="main">
+            <h1>Template Rendering Extension</h1>
+            
+            <p class="lead">
+                Rendering services for your application, extensions, and reusable components.
+            </p>
+            
+            <dl class="wide">
+                <dt>Authors</dt>
+                <dd class="person"><img src="https://secure.gravatar.com/avatar/5441945c65e3a98df2e7a91dc7e9118c?s=16"> <a rel="author" href="https://github.com/amcgregor/">Alice Bevan–McGregor</a></dd>
+                <dd class="person"><img src="https://secure.gravatar.com/avatar/c0962616cb99f5c874a17440934191e9?s=16"> <a rel="author" href="https://github.com/agronholm/">Alex Grönholm</a></dd>
+                
+                <dt>Uses</dt>
+                <dd><ul class="tags"><li><code>locale</code></li></ul></dd>
+                
+                <dt>Provides</dt>
+                <dd><ul class="tags"><li><code>template</code></li></ul></dd>
+                
+                <dt>Hooks</dt>
+                <dd class="tags"><ul class="tags"><li><code>start</code></li><li><code>prepare</code></li></ul></dd>
+                
+                <dt>Context Additions</dt>
+                <dd><ul class="tags"><li><code>namespace</code></li><li><code>render()</code></li></ul></dd>
+                
+                <dt>Entry Points</dt>
+                <dd class="tags"><ul class="tags"><li><code>marrow.templating</code></li></ul></dd>
+            </dl>
+            
+            <h2>Introduction</h2>
+            
+            <p>
+                This extension provides a way for other components to ask for template files to be combined with data and rendered.
+            </p>
+            
+            <h3>Purpose</h3>
+            
+            <p>
+                The <code>template</code> extension provides a mechanism to perform the following tasks:
+            </p>
+            
+            <ol>
+                <li>Render a template (defined by a path) using supplied data.</li>
+                <li>Serialize supplied data into an encapsulation, transport, or interchange format, such as JSON.</li>
+                <li>Allow application controllers to return a template path and data to use as the primary response to a request.</li>
+            </ol>
+            
+            <p>
+                These tasks are independent of each-other, allowing you to use the extension for whole-page generated responses or even content generation for use by other subsystems, such as e-mail messages.
+            </p>
+            
+            <h3>Requirements</h3>
+            
+            <dl>
+                <dt>Python Packages</dt>
+                <dd><ul>
+                    <li><a href="">marrow.templating</a></li>
+                    <li>an engine of your choice</li>
+                </ul></dd>
+            </dl>
+            
+            <h3>Operation</h3>
+            
+            <p>
+                During startup this extension registers a return type handler for tuples and plain dictionaries.
+            </p>
+            
+            <p>
+                When preparing the context on each request, this extension adds two variables: a <code>namespace</code> dictionary and <code>render</code> function.  The <code>namespace</code> can be extended to provide variables to every template being rendered (by default a variable called <code>web</code>, representing the context itself, will be made available to templates) and the <code>render</code> function may be overridden.
+            </p>
+            
+            <p>
+                If a controller returns a 2- or 3-tuple in the form <code>(str, dict[, dict])</code> a template whose name is given by the string value will be rendered with data from the first dictionary, with engine settings provided by an optional second dictionary.  If a controller running on Python 3 returns a dictionary and has a return value annotation, that annotation will be used as per the first tuple element of a tuple return.
+            </p>
+            
+            
+            <h2>Usage</h2>
+            
+            <p>
+                Before any template engines may be utilized you must first activate this extension.  To do so add, at a minimum, an empty <code>template</code> section to your configuration's <code>application.extensions</code> section.  An example of this in YAML, with all other configuration directives omitted, would be the following three lines:
+            </p>
+            
+            <pre class="code">application:
+    extensions:
+        template:</pre>
+            
+            <p>
+                See the next section for the allowable template extension configuration directives.
+            </p>
+            
+            <p>
+                Once your application is configured to process template return types you can return 2- or 3-tuples from within your controllers.  An example controller would be:
+            </p>
+            
+            <pre class="code">class Controller(object):
+    def hello(self, name="world"):
+        return 'mako:myapp.templates.hello', dict(name=name)</pre>
+            
+            <p>
+                If you have defined a default template engine, the engine component of the path may be omitted.  For a full reference of the allowable template references see the <a href="https://github.com/marrow/marrow.templating#4-acceptable-path-references">marrow.templating documentation</a>.
+            </p>
+            
+            
+            <h3>Configuration</h3>
+            
+            The following configuration directives are supported:
+            
+            <dl>
+                <dt><code>engine</code></dt>
+                <dd>The default template engine to utilize if no engine is explicitly defined in the template path being rendered.</dd>
+                
+                <dt><code>path</code></dt>
+                <dd>An optional path to base relative template paths on.</dd>
+                
+                <dt><code>override</code></dt>
+                <dd>A dictionary mapping template path prefixes to their replacements, or lists of replacements.  This is an advanced feature described in greater detail later, in a section entitled <a href="#">Overriding Template Selection</a>.</dd>
+            </dl>
+            
+            <h3>Features for Python 3</h3>
+            
+            <p>
+                Under Python 3 (and Python 2 with an appropriate decorator) you may hard-code the template path for your controllers using <a href="http://www.python.org/dev/peps/pep-3107/">function annotations</a>.  This is especially useful for controller methods that always return serialized data such as JSON, for example:
+            </p>
+            
+            <pre class="code">class Controller(object):
+    def hello(self, name="world") -> 'json':
+        return dict(hello=name)</pre>
+            
+            <p>
+                You may also define a proper template name:
+            </p>
+            
+            <pre class="code">class Controller(object):
+    def hello(self, name="world") -> 'myapp.templates.hello':
+        return dict(name=name)</pre>
+            
+            <h2>Extending</h2>
+            
+            <h3>Adding Engines</h3>
+            
+            <p>
+                This extension relies on an external adapter package called <a href="https://github.com/marrow/marrow.templating">marrow.templating</a> to provide a unified interface to disparate template engines.  In order to extend this system with support for additional template engines or serializers, please read the appropriate section of the <a href="https://github.com/marrow/marrow.templating#5-extending-marrow-templating">marrow.templating manual</a>.
+            </p>
+            
+            <h3>Template Namespace</h3>
+            
+            <p>
+                Extensions may extend the global template namespace by adding attributes to the <code>namespace</code> context attribute during the <code>prepare</code> callback.  Extensions that do this <em>must</em> declare that they depend on the <code>template</code> extension by adding it to their <code>uses</code> or <code>needs</code> class attribute.  If template services are not required (listed in <code>uses</code>, not <code>needs</code>) access to the <code>namespace</code> context attribute must be armoured against <code>namespace</code> not being present.
+            </p>
+            
+            <p>
+                Creating an extension for your application for the purpose of extending the template namespace is not unusual.  Below is an example minimal extension that adds the <code>operator</code> module to all templates:
+            </p>
+            
+            <pre class="code">class ApplicationExtension(object):
+    needs = ['template']
+    
+    def __init__(self, context):
+        super(ApplicationExtension, self).__init__()
+    
+    def prepare(self, context):
+        context.namespace.operator = __import__('operator')</pre>
+            
+            <h3>Overriding Template Selection</h3>
+            
+            <h3>Overriding Behaviour</h3>
+            
+        </section>
+        
+        <hr>
+        
+        <footer>
+            <p>&copy; 2012 Alice Bevan–McGregor and contributors.</p>
+        </footer>
+        
+        <script src="js/libs/jquery-1.7.2.min.js"></script>
+        <script src="js/libs/code/prettify.js"></script>
+        <script src="js/plugins.js"></script>
+        <script src="js/script.js"></script>
+    </body>
+</html>

@@ -1,0 +1,262 @@
+@font-face {
+    font-family: 'Monofur';
+    font-weight: normal;
+    font-style: normal;
+    src: url('fonts/monofur-webfont.eot');
+    src: url('fonts/monofur-webfont.eot?#iefix') format('embedded-opentype'),
+         url('fonts/monofur-webfont.woff') format('woff'),
+         url('fonts/monofur-webfont.ttf') format('truetype'),
+         url('fonts/monofur-webfont.svg#monofurRegular') format('svg');
+}
+
+// Core variables and mixins
+@import "variables.less";
+@import "mixins.less";
+
+// CSS Reset
+@import "reset.less";
+
+// Text Styles
+@import "typography.less";
+
+@import "utility.less";
+
+
+
+
+
+@tocWidth: 230px;
+
+
+
+body {
+    position: relative;
+}
+
+.container {
+    position: relative;
+}
+
+
+
+
+
+nav.page {
+    position: fixed;
+    overflow: visible;
+    
+    top: 0;
+    left: 0;
+    right: 0;
+    height: @navbarHeight;
+    z-index: 5;
+    
+    #gradient > .vertical(@navbarBackgroundHighlight, @navbarBackground);
+    .box-shadow(~"0 1px 3px rgba(0,0,0,.25), inset 0 -1px 0 rgba(0,0,0,.1)");
+    
+    color: @navbarText;
+    font-family: @headingsFontFamily;
+    
+    .brand {
+        display: block;
+        float: left;
+        // Vertically center the text given @navbarHeight
+        @elementHeight: 20px;
+        padding: ((@navbarHeight - @elementHeight) / 2 - 2) 0 ((@navbarHeight - @elementHeight) / 2 + 2) 10px;
+        width: @tocWidth;
+        font-size: 20px;
+        font-weight: 200;
+        line-height: 1;
+        color: @navbarBrandColor;
+        
+        &:hover {
+            text-decoration: none;
+        }
+    }
+    
+    menu {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: inline-block;
+
+        & > li {
+            margin: 0;
+            padding: 0 5px 0 0;
+            display: inline-block;
+        }
+
+        a, label {
+            @elementHeight: 20px;
+
+            vertical-align: middle;
+
+            margin: 0;
+            display: inline-block;
+            text-shadow: 0 -1px 0 rgba(0,0,0,.25);
+
+            padding: ((@navbarHeight - @elementHeight) / 2 - 1) 10px ((@navbarHeight - @elementHeight) / 2 + 1);
+            line-height: 20px;
+        }
+
+        a {
+            color: @navbarLinkColor;
+            text-decoration: none;
+            padding-left: 10px;
+            padding-right: 5px;
+            .transition(color .15s linear);
+
+            &:hover {
+                background-color: @navbarLinkBackgroundHover;
+                color: @navbarLinkColorHover;
+                text-decoration: none;
+            }
+        }
+        
+        a + span {
+            padding-right: 0;
+            max-width: 0;
+            display: inline-block;
+            overflow: hidden;
+            color: transparent;
+            
+            .transition(all .35s ease);
+        }
+        
+        li:hover a + span {
+            max-width: 32px;
+            padding-right: 5px;
+            color: @navbarLinkColor;
+        }
+
+        & > li.active a {
+            color: @navbarLinkColorActive;
+            text-decoration: none;
+            // background-color: @navbarLinkBackgroundActive;
+        }
+
+        &.navigation {
+            position: absolute;
+            right: 0;
+            top: 0;
+
+            a {
+                font-size: 24px;
+            }
+        }
+
+        &.breadcrumb {
+            li + li:before {
+                content: '❭';
+            }
+        }
+    }
+}
+
+aside.toc {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: @tocWidth;
+    background-color: white;
+    border-right: 1px solid silver;
+    z-index: 1;
+    box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
+    
+    font-family: @sansFontFamily;
+    font-weight: 200;
+    
+    nav {
+        padding: @navbarHeight + 10px 10px 10px;
+    }
+    
+    label {
+        font-weight: 800;
+    }
+}
+
+section#main {
+    padding-top: @navbarHeight + 20;
+    padding-left: @tocWidth + 1 + 20;
+    padding-right: 20px;
+    padding-bottom: 20px;
+}
+
+footer {
+    padding-left: @tocWidth + 1 + 20;
+    padding-bottom: 20px;
+}
+
+ul.tags {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    
+    li {
+        display: inline-block;
+        padding: 0 1.5ex;
+        .border-radius(1em);
+        background-color: #e5e5e5;
+        #gradient > .vertical(#e5e5e5, white);
+        .box-shadow(~"0 1px 2px rgba(0,0,0,.125)");
+        
+        margin-right: 1ex;
+    }
+}
+
+dd + dt { margin-top: 1ex; }
+dd { margin-left: 0 1.5ex; }
+dd.tags { margin-left: 0; }
+
+dl.toc {
+    margin: 0;
+    padding: 0;
+    
+    dt, dd {
+        margin: 0;
+        padding: 0;
+    }
+    
+    dd + dt {
+        margin-top: 1ex;
+    }
+    
+    menu {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    
+    li {
+        margin: 0 0 0 10px;
+        padding: 0;
+        
+        a {
+            color: @textColor;
+        }
+    }
+    
+    li:before {
+        float: left;
+        content: '▪';
+        margin-left: -10px;
+        color: silver;
+    }
+    
+}
+
+dl.wide dd + dt + dd { margin-top: 1ex; }
+
+.person {
+    a {
+        vertical-align: middle;
+    }
+    img {
+        vertical-align: middle;
+        border-radius: 2px;
+        margin-top: -3px;
+    }
+}

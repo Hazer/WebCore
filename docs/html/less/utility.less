@@ -1,0 +1,90 @@
+// Floating Content Helpers
+
+.fr {
+    float: right !important;
+}
+
+.fl {
+    float: left !important;
+}
+
+// Text Alignment Helpers
+
+.tl {
+    text-align: left;
+}
+
+.tc {
+    text-align: center;
+}
+
+.tr {
+    text-align: right;
+}
+
+.tj {
+    text-align: justify;
+}
+
+// Content Visibility Helpers
+
+.hide,
+.hidden {
+    display: none;
+    visibility: hidden;
+}
+
+.show {
+    display: block;
+}
+
+.invisible {
+    visibility: hidden;
+}
+
+// Responsive Helpers for Desktops
+
+.visible-phone     { display: none !important; }
+.visible-tablet    { display: none !important; }
+.visible-desktop   { }
+.hidden-phone      { }
+.hidden-tablet     { }
+.hidden-desktop    { display: none !important; }
+
+// Responsive Helpers for Mobile Devices
+
+@media (max-width: 767px) {
+  .visible-phone     { display: inherit !important; }
+  .visible-desktop   { display: none !important; }
+  .hidden-phone      { display: none !important; }
+  .hidden-desktop    { display: inherit !important; }
+}
+
+// Response Helpers for Tablets
+
+@media (min-width: 768px) and (max-width: 979px) {
+  .visible-tablet    { display: inherit !important; }
+  .visible-desktop   { display: none !important; }
+  .hidden-tablet     { display: none !important; }
+  .hidden-desktop    { display: inherit !important; }
+}
+
+// Common Animation Helpers
+
+.fade {
+  opacity: 0;
+  .transition(opacity .15s linear);
+  &.in {
+    opacity: 1;
+  }
+}
+
+.collapse {
+  position: relative;
+  height: 0;
+  overflow: hidden;
+  .transition(height .35s ease);
+  &.in {
+    height: auto;
+  }
+}
